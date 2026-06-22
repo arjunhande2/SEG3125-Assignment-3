@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Match - SEG3125</title>
+  <style>
+    /*
+      SEG3125 Assignment 3 - one file GitHub Pages version
+      Student: Arjun Hande
+      Note: I kept this simpler than the first version so it is easier to explain and submit.
+    */
+
+    :root {
+      --blue: #315f9d;
+      --darkBlue: #193b63;
+      --bg: #f3f7fb;
+      --card: #ffffff;
+      --line: #d2dbe6;
+      --text: #222222;
+      --softText: #657080;
+      --green: #e7f7e9;
+      --orange: #fff1e5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .page {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 24px 16px 38px;
+    }
+
+    header,
+    .setup,
+    .game,
+    .notes {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 3px 9px rgba(20, 40, 70, 0.07);
+    }
+
+    header {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2.2rem;
+      color: var(--darkBlue);
+    }
+
+    h2, h3 {
+      color: var(--darkBlue);
+      margin-top: 0;
+    }
+
+    p { margin-top: 0; }
+
+    .tagline {
+      color: var(--softText);
+      max-width: 760px;
+      margin-bottom: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .setup { padding: 16px; }
+
+    label {
+      display: block;
+      margin: 14px 0 5px;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    select, button { font: inherit; }
+
+    select {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #b7c2d1;
+      border-radius: 8px;
+      background: white;
+    }
+
+    .mainButton,
+    .secondButton {
+      width: 100%;
+      margin-top: 14px;
+      padding: 11px 12px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .mainButton {
+      background: var(--blue);
+      color: white;
+      font-weight: bold;
+    }
+
+    .secondButton {
+      background: #e9eef5;
+      color: var(--darkBlue);
+    }
+
+    button:hover { filter: brightness(0.96); }
+
+    .rules {
+      margin-top: 16px;
+      background: #f7f9fc;
+      border-left: 4px solid var(--blue);
+      padding: 11px;
+      border-radius: 6px;
+      font-size: 0.93rem;
+      color: #3e4a56;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--line);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .statBox {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .statBox span {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--softText);
+    }
+
+    .statBox strong {
+      color: var(--darkBlue);
+      font-size: 1.15rem;
+    }
+
+    .message {
+      margin: 14px;
+      min-height: 46px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid #c8dcf6;
+      background: #eef5ff;
+      color: #233d5c;
+    }
+
+    .message.good {
+      background: var(--green);
+      border-color: #b8e2bf;
+    }
+
+    .message.bad {
+      background: var(--orange);
+      border-color: #ffcfa8;
+    }
+
+    .boardArea { padding: 14px 14px 20px; }
+
+    .empty, .result {
+      text-align: center;
+      padding: 54px 18px;
+      color: var(--softText);
+    }
+
+    .result strong {
+      display: block;
+      color: var(--darkBlue);
+      font-size: 2rem;
+      margin: 8px 0;
+    }
+
+    .board {
+      display: grid;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .board.easy { grid-template-columns: repeat(4, minmax(58px, 90px)); }
+    .board.normal { grid-template-columns: repeat(4, minmax(58px, 90px)); }
+    .board.hard { grid-template-columns: repeat(4, minmax(58px, 90px)); }
+
+    .cardBtn {
+      aspect-ratio: 1 / 1;
+      border: 2px solid var(--darkBlue);
+      border-radius: 10px;
+      background: var(--blue);
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .cardBtn.open,
+    .cardBtn.matched {
+      background: white;
+      color: #222;
+      transform: translateY(-2px);
+    }
+
+    .cardBtn.matched {
+      border-color: #58a66b;
+      background: #f1fff3;
+    }
+
+    .cardBtn:focus {
+      outline: 3px solid #f2c84b;
+      outline-offset: 2px;
+    }
+
+    .notes {
+      margin-top: 18px;
+      padding: 16px 18px;
+    }
+
+    .noteGrid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .noteCard {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 12px;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--softText);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .noteGrid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.8rem; }
+      .board.easy, .board.normal, .board.hard { grid-template-columns: repeat(4, 1fr); }
+      .cardBtn { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React is loaded from a CDN so this can stay as one file for GitHub Pages. -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useEffect, useMemo, useState } = React;
+
+    const cardSets = {
+      animals: ['🐶', '🐱', '🐸', '🦊', '🐼', '🐵', '🐰', '🦁'],
+      nature: ['🌲', '🌙', '⭐', '🌊', '🌻', '🍁', '☁️', '🍄'],
+      food: ['🍕', '🍓', '🍩', '🍔', '🍪', '🍎', '🌮', '🥐']
+    };
+
+    const levels = {
+      easy: { name: 'Easy', pairs: 4 },
+      normal: { name: 'Normal', pairs: 6 },
+      hard: { name: 'Hard', pairs: 8 }
+    };
+
+    function shuffle(list) {
+      const copy = [...list];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function makeCards(level, theme) {
+      const chosen = cardSets[theme].slice(0, levels[level].pairs);
+      const doubled = [...chosen, ...chosen];
+      return shuffle(doubled).map((symbol, index) => ({
+        id: index + '-' + symbol,
+        symbol,
+        open: false,
+        matched: false
+      }));
+    }
+
+    function timeText(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const sec = String(seconds % 60).padStart(2, '0');
+      return minutes + ':' + sec;
+    }
+
+    function App() {
+      const [level, setLevel] = useState('normal');
+      const [theme, setTheme] = useState('animals');
+      const [cards, setCards] = useState([]);
+      const [selected, setSelected] = useState([]);
+      const [moves, setMoves] = useState(0);
+      const [seconds, setSeconds] = useState(0);
+      const [message, setMessage] = useState({ text: 'Choose your settings, then press Start.', type: '' });
+      const [playing, setPlaying] = useState(false);
+      const [done, setDone] = useState(false);
+      const [locked, setLocked] = useState(false);
+
+      const pairCount = levels[level].pairs;
+      const matches = cards.filter(card => card.matched).length / 2;
+      const bestKey = 'memoryMatchBest_' + level;
+      const best = localStorage.getItem(bestKey) || '--';
+
+      const score = useMemo(() => {
+        if (!done) return 0;
+        return Math.max(10, 1000 - moves * 15 - seconds * 3 + pairCount * 50);
+      }, [done, moves, seconds, pairCount]);
+
+      useEffect(() => {
+        if (!playing || done) return;
+        const timer = setInterval(() => setSeconds(s => s + 1), 1000);
+        return () => clearInterval(timer);
+      }, [playing, done]);
+
+      useEffect(() => {
+        if (!done) return;
+        const oldBest = Number(localStorage.getItem(bestKey) || 0);
+        if (score > oldBest) {
+          localStorage.setItem(bestKey, String(score));
+        }
+      }, [done, score, bestKey]);
+
+      function startGame() {
+        setCards(makeCards(level, theme));
+        setSelected([]);
+        setMoves(0);
+        setSeconds(0);
+        setPlaying(true);
+        setDone(false);
+        setLocked(false);
+        setMessage({ text: levels[level].name + ' level started. Pick any two cards.', type: '' });
+      }
+
+      function flipCard(index) {
+        if (!playing || done || locked) return;
+        const card = cards[index];
+        if (card.open || card.matched) return;
+
+        const updated = cards.map((item, i) => i === index ? { ...item, open: true } : item);
+        const nextSelected = [...selected, index];
+        setCards(updated);
+        setSelected(nextSelected);
+
+        if (nextSelected.length === 1) {
+          setMessage({ text: 'Now choose one more card.', type: '' });
+          return;
+        }
+
+        setMoves(m => m + 1);
+        setLocked(true);
+
+        const first = updated[nextSelected[0]];
+        const second = updated[nextSelected[1]];
+
+        if (first.symbol === second.symbol) {
+          setTimeout(() => {
+            const matchedCards = updated.map((item, i) => {
+              if (i === nextSelected[0] || i === nextSelected[1]) {
+                return { ...item, matched: true };
+              }
+              return item;
+            });
+
+            const newMatches = matchedCards.filter(card => card.matched).length / 2;
+            setCards(matchedCards);
+            setSelected([]);
+            setLocked(false);
+            setMessage({ text: 'Good match. Keep going.', type: 'good' });
+
+            if (newMatches === pairCount) {
+              setDone(true);
+              setPlaying(false);
+              setMessage({ text: 'Finished. Your score is shown below.', type: 'good' });
+            }
+          }, 350);
+        } else {
+          setMessage({ text: 'Not a match. Try to remember both spots.', type: 'bad' });
+          setTimeout(() => {
+            setCards(updated.map((item, i) => {
+              if (i === nextSelected[0] || i === nextSelected[1]) {
+                return { ...item, open: false };
+              }
+              return item;
+            }));
+            setSelected([]);
+            setLocked(false);
+          }, 850);
+        }
+      }
+
+      function peek() {
+        if (!playing || done || locked) {
+          setMessage({ text: 'Start the game before using the peek option.', type: '' });
+          return;
+        }
+
+        setLocked(true);
+        const opened = cards.map(card => card.matched ? card : { ...card, open: true });
+        setCards(opened);
+        setMessage({ text: 'Quick peek. The cards will hide again in 2 seconds.', type: '' });
+
+        setTimeout(() => {
+          setCards(opened.map(card => card.matched ? card : { ...card, open: false }));
+          setSelected([]);
+          setLocked(false);
+          setMessage({ text: 'Peek is done. Continue matching.', type: '' });
+        }, 2000);
+      }
+
+      return (
+        <div className="page">
+          <header>
+            <h1>Memory Match</h1>
+            <p className="tagline">
+              A small browser game for practicing short-term memory. Flip two cards at a time,
+              remember their positions, and try to match all pairs with fewer moves.
+            </p>
+          </header>
+
+          <main className="layout">
+            <aside className="setup" aria-label="game setup">
+              <h2>Setup</h2>
+              <p style={{ marginTop: '-4px', color: '#667' }}>Choose a level and a card set.</p>
+
+              <label htmlFor="level">Level</label>
+              <select id="level" value={level} onChange={e => setLevel(e.target.value)} disabled={playing}>
+                <option value="easy">Easy - 4 pairs</option>
+                <option value="normal">Normal - 6 pairs</option>
+                <option value="hard">Hard - 8 pairs</option>
+              </select>
+
+              <label htmlFor="theme">Card theme</label>
+              <select id="theme" value={theme} onChange={e => setTheme(e.target.value)} disabled={playing}>
+                <option value="animals">Animals</option>
+                <option value="nature">Nature</option>
+                <option value="food">Food</option>
+              </select>
+
+              <button className="mainButton" onClick={startGame}>Start / Restart</button>
+              <button className="secondButton" onClick={peek}>Peek for 2 seconds</button>
+
+              <div className="rules">
+                <strong>Rules:</strong><br />
+                Pick two cards. Matching cards stay open. Non-matching cards flip back, so you have to remember where they were.
+              </div>
+            </aside>
+
+            <section className="game" aria-label="memory game area">
+              <div className="stats">
+                <div className="statBox"><span>Time</span><strong>{timeText(seconds)}</strong></div>
+                <div className="statBox"><span>Moves</span><strong>{moves}</strong></div>
+                <div className="statBox"><span>Matches</span><strong>{matches}/{pairCount}</strong></div>
+                <div className="statBox"><span>Best</span><strong>{best}</strong></div>
+              </div>
+
+              <div className={'message ' + message.type}>{message.text}</div>
+
+              <div className="boardArea">
+                {!playing && !done && (
+                  <div className="empty">
+                    <h2>Ready to play?</h2>
+                    <p>This prototype keeps the interaction simple so the focus stays on memory.</p>
+                  </div>
+                )}
+
+                {(playing || done) && (
+                  <div className={'board ' + level}>
+                    {cards.map((card, index) => (
+                      <button
+                        key={card.id}
+                        className={'cardBtn ' + (card.open ? 'open ' : '') + (card.matched ? 'matched' : '')}
+                        onClick={() => flipCard(index)}
+                        aria-label={card.open || card.matched ? 'Open card showing ' + card.symbol : 'Hidden card'}
+                      >
+                        {card.open || card.matched ? card.symbol : '?'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {done && (
+                  <div className="result">
+                    <h2>Game finished</h2>
+                    <strong>{score}</strong>
+                    <p>You completed {levels[level].name} mode in {timeText(seconds)} using {moves} moves.</p>
+                    <button className="mainButton" onClick={startGame}>Play again</button>
+                  </div>
+                )}
+              </div>
+            </section>
+          </main>
+
+          <section className="notes" aria-label="design notes">
+            <h2>Design notes</h2>
+            <p>
+              This one-file version uses React, but without a full Vite project. The left side is for setup,
+              and the right side is for playing. The card grid uses similarity and proximity, and the open cards use
+              contrast so the player can quickly see what changed.
+            </p>
+            <div className="noteGrid">
+              <div className="noteCard">
+                <h3>Persona 1: Maya</h3>
+                <p>Maya wants a calm game that is easy to understand during study breaks, so the design avoids too many controls.</p>
+              </div>
+              <div className="noteCard">
+                <h3>Persona 2: Leo</h3>
+                <p>Leo likes replaying for a better score, so the game keeps moves, time, matches, and best score visible.</p>
+              </div>
+            </div>
+          </section>
+
+          <footer>SEG3125 Assignment 3 prototype · Arjun Hande</footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
