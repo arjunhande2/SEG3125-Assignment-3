@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Match - SEG3125</title>
+  <style>
+    /*
+      SEG3125 Assignment 3 - Memory Match
+      One-file GitHub Pages version.
+      I kept the design and code straightforward so it is easier to explain in the report.
+    */
+
+    :root {
+      --blue: #2f5f9f;
+      --blue-dark: #173a63;
+      --bg: #f3f7fb;
+      --card: #ffffff;
+      --text: #222222;
+      --muted: #667080;
+      --border: #d4dce6;
+      --good-bg: #e5f7e8;
+      --good-border: #a9d7b2;
+      --bad-bg: #fff0e3;
+      --bad-border: #ffc38d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .page {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 24px 16px 38px;
+    }
+
+    header, .panel, .game-panel, .notes {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(20, 40, 70, 0.07);
+    }
+
+    header {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2.15rem;
+      color: var(--blue-dark);
+    }
+
+    h2, h3 {
+      color: var(--blue-dark);
+      margin-top: 0;
+    }
+
+    p { margin-top: 0; }
+
+    .tagline {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 0;
+    }
+
+    .main-area {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel { padding: 16px; }
+
+    label {
+      display: block;
+      margin: 14px 0 5px;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    select, button { font: inherit; }
+
+    select {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #b8c5d2;
+      border-radius: 8px;
+      background: white;
+    }
+
+    .start-btn, .small-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 11px 12px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .start-btn {
+      background: var(--blue);
+      color: white;
+      font-weight: bold;
+    }
+
+    .small-btn {
+      background: #e9eef5;
+      color: var(--blue-dark);
+    }
+
+    button:hover { filter: brightness(0.96); }
+
+    button:focus {
+      outline: 3px solid #f3ca4e;
+      outline-offset: 2px;
+    }
+
+    .rule-text {
+      margin-top: 16px;
+      background: #f8fafc;
+      border-left: 4px solid var(--blue);
+      padding: 11px;
+      border-radius: 6px;
+      font-size: 0.93rem;
+      color: #3d4b59;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .stat-box {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-box span {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .stat-box strong {
+      color: var(--blue-dark);
+      font-size: 1.12rem;
+    }
+
+    .message {
+      margin: 14px;
+      min-height: 44px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid #c7dcf7;
+      background: #eef5ff;
+      color: #243e5d;
+    }
+
+    .message.good {
+      background: var(--good-bg);
+      border-color: var(--good-border);
+    }
+
+    .message.bad {
+      background: var(--bad-bg);
+      border-color: var(--bad-border);
+    }
+
+    .board-wrap {
+      padding: 14px 14px 20px;
+    }
+
+    .empty-note, .result-box {
+      text-align: center;
+      padding: 52px 18px;
+      color: var(--muted);
+    }
+
+    .result-box strong {
+      display: block;
+      font-size: 2rem;
+      color: var(--blue-dark);
+      margin: 8px 0;
+    }
+
+    .board {
+      display: grid;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .board.easy { grid-template-columns: repeat(4, minmax(58px, 90px)); }
+    .board.normal { grid-template-columns: repeat(4, minmax(58px, 90px)); }
+    .board.hard { grid-template-columns: repeat(4, minmax(58px, 90px)); }
+
+    .card {
+      aspect-ratio: 1 / 1;
+      border: 2px solid var(--blue-dark);
+      border-radius: 10px;
+      background: var(--blue);
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.15s;
+      min-height: 58px;
+    }
+
+    .card.open, .card.matched {
+      background: white;
+      color: #222;
+      transform: translateY(-2px);
+    }
+
+    .card.matched {
+      border-color: #5aa269;
+      background: #f1fff3;
+    }
+
+    .notes {
+      margin-top: 18px;
+      padding: 16px 18px;
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .note-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfe;
+    }
+
+    footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    @media (max-width: 820px) {
+      .main-area { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .note-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.8rem; }
+      .board.easy, .board.normal, .board.hard { grid-template-columns: repeat(4, 1fr); }
+      .card { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Memory Match</h1>
+      <p class="tagline">
+        A small browser game for practicing short-term memory. Flip two cards at a time,
+        remember their positions, and try to match all pairs with fewer moves.
+      </p>
+    </header>
+
+    <main class="main-area">
+      <aside class="panel" aria-label="game setup">
+        <h2>Setup</h2>
+        <p style="margin-top: -4px; color: #667;">Choose a level and a card set.</p>
+
+        <label for="level">Level</label>
+        <select id="level">
+          <option value="easy">Easy - 4 pairs</option>
+          <option value="normal" selected>Normal - 6 pairs</option>
+          <option value="hard">Hard - 8 pairs</option>
+        </select>
+
+        <label for="theme">Card theme</label>
+        <select id="theme">
+          <option value="animals">Animals</option>
+          <option value="nature">Nature</option>
+          <option value="food">Food</option>
+        </select>
+
+        <button class="start-btn" id="startBtn" type="button">Start / Restart</button>
+        <button class="small-btn" id="peekBtn" type="button">Peek for 2 seconds</button>
+
+        <div class="rule-text">
+          <strong>Rules:</strong><br />
+          Pick two cards. Matching cards stay open. Non-matching cards flip back, so you have to remember where they were.
+        </div>
+      </aside>
+
+      <section class="game-panel" aria-label="memory game area">
+        <div class="stats">
+          <div class="stat-box"><span>Time</span><strong id="time">0:00</strong></div>
+          <div class="stat-box"><span>Moves</span><strong id="moves">0</strong></div>
+          <div class="stat-box"><span>Matches</span><strong id="matches">0/6</strong></div>
+          <div class="stat-box"><span>Best</span><strong id="best">--</strong></div>
+        </div>
+
+        <div class="message" id="message">Choose your settings, then press Start.</div>
+
+        <div class="board-wrap">
+          <div id="empty" class="empty-note">
+            <h2>Ready to play?</h2>
+            <p>This prototype keeps the interaction simple so the focus stays on memory.</p>
+          </div>
+          <div id="board" class="board normal" hidden></div>
+          <div id="result" class="result-box" hidden></div>
+        </div>
+      </section>
+    </main>
+
+    <section class="notes" aria-label="design notes">
+      <h2>Design notes</h2>
+      <p>
+        This one-file version uses a simple layout instead of a large setup. The left side is for setup,
+        and the right side is for playing. The card grid uses similarity and proximity, and the open cards use
+        contrast so the player can quickly see what changed.
+      </p>
+      <div class="note-grid">
+        <div class="note-card">
+          <h3>Persona 1: Maya</h3>
+          <p>Maya wants a calm game that is easy to understand during study breaks, so the design avoids too many controls.</p>
+        </div>
+        <div class="note-card">
+          <h3>Persona 2: Leo</h3>
+          <p>Leo likes replaying for a better score, so the game keeps moves, time, matches, and best score visible.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      SEG3125 Assignment 3 prototype · Arjun Hande
+    </footer>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      const sets = {
+        animals: ['🐶', '🐱', '🐸', '🦊', '🐼', '🐵', '🐰', '🦁'],
+        nature: ['🌲', '🌙', '⭐', '🌊', '🌻', '🍁', '☁️', '🍄'],
+        food: ['🍕', '🍓', '🍩', '🍔', '🍪', '🍎', '🌮', '🥐']
+      };
+
+      const levelPairs = { easy: 4, normal: 6, hard: 8 };
+      const levelNames = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };
+
+      const board = document.getElementById('board');
+      const empty = document.getElementById('empty');
+      const result = document.getElementById('result');
+      const message = document.getElementById('message');
+      const timeBox = document.getElementById('time');
+      const movesBox = document.getElementById('moves');
+      const matchesBox = document.getElementById('matches');
+      const bestBox = document.getElementById('best');
+      const levelSelect = document.getElementById('level');
+      const themeSelect = document.getElementById('theme');
+      const startBtn = document.getElementById('startBtn');
+      const peekBtn = document.getElementById('peekBtn');
+
+      let cardButtons = [];
+      let firstCard = null;
+      let secondCard = null;
+      let lockBoard = false;
+      let moves = 0;
+      let matches = 0;
+      let seconds = 0;
+      let timer = null;
+      let gameStarted = false;
+
+      function shuffle(array) {
+        const copy = array.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const old = copy[i];
+          copy[i] = copy[j];
+          copy[j] = old;
+        }
+        return copy;
+      }
+
+      function formatTime(totalSeconds) {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = String(totalSeconds % 60).padStart(2, '0');
+        return mins + ':' + secs;
+      }
+
+      function setMessage(text, type) {
+        message.textContent = text;
+        message.className = 'message';
+        if (type) message.classList.add(type);
+      }
+
+      function getBestKey() {
+        return 'memoryMatchBest_' + levelSelect.value;
+      }
+
+      function updateStats() {
+        const pairCount = levelPairs[levelSelect.value];
+        timeBox.textContent = formatTime(seconds);
+        movesBox.textContent = moves;
+        matchesBox.textContent = matches + '/' + pairCount;
+        bestBox.textContent = localStorage.getItem(getBestKey()) || '--';
+      }
+
+      function startTimer() {
+        clearInterval(timer);
+        timer = setInterval(function () {
+          seconds += 1;
+          updateStats();
+        }, 1000);
+      }
+
+      function stopTimer() {
+        clearInterval(timer);
+        timer = null;
+      }
+
+      function resetTurn() {
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+      }
+
+      function startGame() {
+        const level = levelSelect.value;
+        const theme = themeSelect.value;
+        const pairCount = levelPairs[level];
+        const chosenSymbols = sets[theme].slice(0, pairCount);
+        const cardValues = shuffle(chosenSymbols.concat(chosenSymbols));
+
+        cardButtons = [];
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+        moves = 0;
+        matches = 0;
+        seconds = 0;
+        gameStarted = true;
+
+        board.innerHTML = '';
+        board.className = 'board ' + level;
+        empty.hidden = true;
+        result.hidden = true;
+        board.hidden = false;
+
+        cardValues.forEach(function (symbol, index) {
+          const btn = document.createElement('button');
+          btn.className = 'card';
+          btn.type = 'button';
+          btn.textContent = '?';
+          btn.dataset.symbol = symbol;
+          btn.dataset.index = index;
+          btn.setAttribute('aria-label', 'Hidden card');
+          btn.addEventListener('click', function () { flipCard(btn); });
+          board.appendChild(btn);
+          cardButtons.push(btn);
+        });
+
+        updateStats();
+        setMessage(levelNames[level] + ' level started. Pick any two cards.', null);
+        startTimer();
+      }
+
+      function flipCard(card) {
+        if (!gameStarted || lockBoard) return;
+        if (card === firstCard || card.classList.contains('matched')) return;
+
+        card.classList.add('open');
+        card.textContent = card.dataset.symbol;
+        card.setAttribute('aria-label', 'Open card showing ' + card.dataset.symbol);
+
+        if (!firstCard) {
+          firstCard = card;
+          setMessage('Now choose one more card.', null);
+          return;
+        }
+
+        secondCard = card;
+        moves += 1;
+        updateStats();
+        checkMatch();
+      }
+
+      function checkMatch() {
+        const sameSymbol = firstCard.dataset.symbol === secondCard.dataset.symbol;
+
+        if (sameSymbol) {
+          firstCard.classList.add('matched');
+          secondCard.classList.add('matched');
+          matches += 1;
+          setMessage('Good match. Keep going.', 'good');
+          resetTurn();
+          updateStats();
+
+          if (matches === levelPairs[levelSelect.value]) {
+            finishGame();
+          }
+        } else {
+          lockBoard = true;
+          setMessage('Not a match. Try to remember both spots.', 'bad');
+          setTimeout(function () {
+            firstCard.classList.remove('open');
+            secondCard.classList.remove('open');
+            firstCard.textContent = '?';
+            secondCard.textContent = '?';
+            firstCard.setAttribute('aria-label', 'Hidden card');
+            secondCard.setAttribute('aria-label', 'Hidden card');
+            resetTurn();
+          }, 850);
+        }
+      }
+
+      function finishGame() {
+        stopTimer();
+        gameStarted = false;
+
+        const level = levelSelect.value;
+        const score = Math.max(10, 1000 - moves * 15 - seconds * 3 + levelPairs[level] * 50);
+        const bestKey = getBestKey();
+        const currentBest = Number(localStorage.getItem(bestKey) || 0);
+
+        if (score > currentBest) {
+          localStorage.setItem(bestKey, String(score));
+        }
+
+        updateStats();
+        setMessage('Finished. Your final score is shown below.', 'good');
+
+        result.innerHTML = '';
+        const h2 = document.createElement('h2');
+        h2.textContent = 'Game finished';
+        const strong = document.createElement('strong');
+        strong.textContent = score;
+        const p = document.createElement('p');
+        p.textContent = 'You completed ' + levelNames[level] + ' mode in ' + formatTime(seconds) + ' using ' + moves + ' moves.';
+        const again = document.createElement('button');
+        again.className = 'start-btn';
+        again.type = 'button';
+        again.textContent = 'Play again';
+        again.addEventListener('click', startGame);
+        result.appendChild(h2);
+        result.appendChild(strong);
+        result.appendChild(p);
+        result.appendChild(again);
+        result.hidden = false;
+      }
+
+      function peekCards() {
+        if (!gameStarted || lockBoard) {
+          setMessage('Start the game before using the peek option.', null);
+          return;
+        }
+
+        lockBoard = true;
+        cardButtons.forEach(function (card) {
+          if (!card.classList.contains('matched')) {
+            card.classList.add('open');
+            card.textContent = card.dataset.symbol;
+          }
+        });
+        setMessage('Quick peek. The cards will hide again in 2 seconds.', null);
+
+        setTimeout(function () {
+          cardButtons.forEach(function (card) {
+            if (!card.classList.contains('matched')) {
+              card.classList.remove('open');
+              card.textContent = '?';
+              card.setAttribute('aria-label', 'Hidden card');
+            }
+          });
+          resetTurn();
+          setMessage('Peek is done. Continue matching.', null);
+        }, 2000);
+      }
+
+      startBtn.addEventListener('click', startGame);
+      peekBtn.addEventListener('click', peekCards);
+      levelSelect.addEventListener('change', updateStats);
+      updateStats();
+    });
+  </script>
+</body>
+</html>
